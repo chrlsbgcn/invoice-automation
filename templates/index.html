@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Invoice - Invoice Data Extractor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        Upload Your Invoice
+                    </h2>
+                    <p class="text-muted">Simply drag and drop your PDF invoice or click to browse</p>
+                </div>
+
+                <form id="uploadForm" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="mb-3" id="uploadContent">
+                            <i class="fas fa-file-pdf fa-3x text-primary mb-3"></i>
+                            <h4 class="fw-bold">Drop your PDF invoice here</h4>
+                            <p class="text-muted">or</p>
+                            <input type="file" id="fileInput" name="file" accept=".pdf" class="d-none" required>
+                            <button type="button" class="btn btn-custom" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-folder-open me-2"></i>
+                                Choose File
+                            </button>
+                        </div>
+                        <div id="fileInfo" class="mt-3" style="display: none;">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>File selected:</strong> <span id="fileName"></span>
+                                <br>
+                                <small class="text-muted">Ready to extract data</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success-custom btn-lg" id="submitBtn" disabled>
+                            <i class="fas fa-magic me-2"></i>
+                            Extract Data
+                        </button>
+                    </div>
+                </form>
+
+                <div class="loading text-center mt-4" id="loading">
+                    <div class="spinner-border spinner-border-custom text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Processing your invoice... This may take a few moments.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom mt-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    How it works
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="fas fa-upload fa-2x text-primary"></i>
+                        </div>
+                        <h6 class="fw-bold">1. Upload</h6>
+                        <p class="text-muted small">Upload your PDF invoice file</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="fas fa-cogs fa-2x text-primary"></i>
+                        </div>
+                        <h6 class="fw-bold">2. Process</h6>
+                        <p class="text-muted small">Our AI extracts structured data</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="fas fa-download fa-2x text-primary"></i>
+                        </div>
+                        <h6 class="fw-bold">3. Download</h6>
+                        <p class="text-muted small">Get CSV or Excel files</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom mt-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Supported Features
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Multi-page PDF invoices
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Scanned/image-based PDFs
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Company name extraction
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Plan and pricing details
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                CSV and Excel export
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Google Sheets integration
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Data preview
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Secure file processing
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Store the dropped file here
+let droppedFile = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const loading = document.getElementById('loading');
+    const uploadContent = document.getElementById('uploadContent');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!uploadArea.contains(e.relatedTarget)) {
+            uploadArea.classList.remove('dragover');
+        }
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            droppedFile = files[0];
+            fileName.textContent = droppedFile.name;
+            fileInfo.style.display = 'block';
+            submitBtn.disabled = false;
+            uploadContent.innerHTML = `
+                <i class="fas fa-file-pdf fa-3x text-success mb-3"></i>
+                <h4 class="fw-bold text-success">PDF File Ready!</h4>
+                <p class="text-muted">${droppedFile.name}</p>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Choose Different File
+                </button>
+            `;
+        }
+    });
+
+    // Click to upload
+    uploadArea.addEventListener('click', function(e) {
+        if (e.target !== fileInput && e.target !== submitBtn && !submitBtn.contains(e.target)) {
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', function() {
+        droppedFile = null; // Reset dropped file if user selects manually
+        handleFileSelect();
+    });
+
+    function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'block';
+                submitBtn.disabled = false;
+                uploadContent.innerHTML = `
+                    <i class="fas fa-file-pdf fa-3x text-success mb-3"></i>
+                    <h4 class="fw-bold text-success">PDF File Ready!</h4>
+                    <p class="text-muted">${file.name}</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Choose Different File
+                    </button>
+                `;
+            } else {
+                alert('Please select a PDF file.');
+                resetFileInput();
+            }
+        }
+    }
+
+    function resetFileInput() {
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        submitBtn.disabled = true;
+        uploadContent.innerHTML = `
+            <i class="fas fa-file-pdf fa-3x text-primary mb-3"></i>
+            <h4 class="fw-bold">Drop your PDF invoice here</h4>
+            <p class="text-muted">or</p>
+            <input type="file" id="fileInput" name="file" accept=".pdf" class="d-none" required>
+            <button type="button" class="btn btn-custom" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-folder-open me-2"></i>
+                Choose File
+            </button>
+        `;
+    }
+
+    // Form submission (AJAX)
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        let fileToSend = null;
+        if (droppedFile) {
+            fileToSend = droppedFile;
+        } else if (fileInput.files.length > 0) {
+            fileToSend = fileInput.files[0];
+        }
+        if (!fileToSend) {
+            alert('Please select a file first.');
+            return;
+        }
+        // Show loading
+        loading.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('file', fileToSend);
+
+        // AJAX request
+        fetch(uploadForm.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => {
+            loading.style.display = 'none';
+            // Replace the whole page with the result (works for Flask render_template)
+            document.open();
+            document.write(html);
+            document.close();
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            alert('An error occurred while uploading. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Extract Data';
+        });
+    });
+});
+</script>
+{% endblock %} 
